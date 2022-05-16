@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                 http://www.springframework.org/schema/beans/spring-beans.xsd
+                                 http://www.springframework.org/schema/security
+                                 http://www.springframework.org/schema/security/spring-security.xsd">
+        
+	<http auto-config="true" use-expressions="true">
+		<intercept-url pattern="/resources/**" access="permitAll" />
+		<intercept-url pattern="/login/**" access="permitAll" />
+		<!-- 
+		<intercept-url pattern="/login/**" access="isAnonymous()" />
+		<intercept-url pattern="/register/**" access="isAnonymous()" /> -->
+        <intercept-url pattern="/**" access="hasRole('ROLE_ADMIN')" />
+        <!-- 로그인 설정 -->
+        <form-login login-page="/login/loginPage.do" 
+        			login-processing-url="/login.do"
+        			authentication-failure-url="/login/loginPage.do?err=true" 
+        			default-target-url="/" 
+        			username-parameter="userid" 
+        			password-parameter="userpw" /> 
+        <!-- 로그아웃 설정 -->
+        <logout logout-url="/logout"
+				logout-success-url="/"
+				invalidate-session="true"
+				delete-cookies="true" />			
+        <session-management> 
+        	<concurrency-control max-sessions="1" expired-url="/" /> 
+        </session-management>
+		<!-- 권한 없음 403에러 페이지 대체 설정 가능 
+        <access-denied-handler error-page="/" /> -->
+    </http>   
+    <authentication-manager>
+    	<authentication-provider>
+    		<!-- <user-service>
+    			<user name="admin" password="admin" authorities="ROLE_USER, ROLE_ADMIN"/>
+            	<user name="user" password="user" authorities="ROLE_USER"/>
+            </user-service> -->
+            <jdbc-user-service data-source-ref="dataSource" 
+            users-by-username-query="SELECT user_id as username, pw, 1 as enabled FROM TEST_USER WHERE USERID=?" 
+            authorities-by-username-query="SELECT user_id as username, CASE WHEN grade='01' THEN 'ROLE_ADMIN' ELSE 'ROLE_USER' END authority FROM user WHERE user_id=?" />
+        </authentication-provider>
+    </authentication-manager>
+</beans:beans>
